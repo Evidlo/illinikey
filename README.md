@@ -1,5 +1,7 @@
 # IlliniKey
 
+![](image.png)
+
 Generate one time passwords (OTP) offline for UIUC Duo login.  Based heavily on [local-boilerkey](https://github.com/elnardu/local-boilerkey).
 
 # Setup and usage
