@@ -2,23 +2,14 @@ import base64
 import json
 import os
 import sys
+import requests
+import pyotp
 
-try:
-    import requests
-    import pyotp
-except ImportError:
-    print("This script requires pyotp and requests packages")
-    print("Please run 'pip3 install pyotp requests'")
-    sys.exit(1)
-
-CONFIG_PATH = os.path.dirname(os.path.realpath(__file__)) + '/config.json'
-COUNTER_PATH = os.path.dirname(os.path.realpath(__file__)) + '/counter.json'
-
-# DO NOT LOSE YOUR WAAAAAAY!
+CONFIG_PATH = os.path.expanduser('~/.cache/illinikey.json')
+COUNTER_PATH = os.path.expanduser('~/.cache/illinikey_counter.json')
 
 __license__ = "WTFPL"
-__author__ = "Russian election hackers"
-__credits__ = ['ITaP', 'Mitch Daniels']
+__author__ = "Evan Widloski, Elnard Utiushev"
 
 
 def getActivationData(code):
@@ -42,7 +33,7 @@ def getActivationData(code):
         "customer_protocol": 1
     }
 
-    ENDPOINT = "https://api-1b9bef70.duosecurity.com/push/v2/activation/{}"
+    ENDPOINT = "https://api-cd3ecedb.duosecurity.com/push/v2/activation/{}"
 
     res = requests.post(
         ENDPOINT.format(code),
@@ -52,7 +43,7 @@ def getActivationData(code):
 
     if res.json().get('code') == 40403:
         print("Invalid activation code."
-              "Please request a new link in BoilerKey settings.")
+              "Please request a new activation link.")
         sys.exit(1)
 
     if not res.json()['response']:
@@ -65,7 +56,7 @@ def getActivationData(code):
 
 def validateLink(link):
     try:
-        assert "m-1b9bef70.duosecurity.com" in link
+        assert "m-cd3ecedb.duosecurity.com" in link
         code = link.split('/')[-1]
         assert len(code) == 20
         return True, code
@@ -115,36 +106,29 @@ def generatePassword():
 
 
 def askForInfo():
-    print("""Hello there.
-1. Please go to the BoilerKey settings (https://purdue.edu/boilerkey)
-   and click on 'Set up a new Duo Mobile BoilerKey'
-2. Follow the process until you see the qr code
-3. Paste the link (https://m-1b9bef70.duosecurity.com/activate/XXXXXXXXXXX)
-   under the qr code right here and press Enter""")
+    print(
+        """
+1. Visit verify.uillinois.edu/manage and 'Add a new device'.
+2. Add a new Android smartphone.  You can enter a fake phone number.
+3. Request an activation link and paste it here."""
+    )
 
     valid = False
     while not valid:
-        link = input()
+        link = input('activation link: ')
         valid, activationCode = validateLink(link)
 
         if not valid:
             print("Invalid link. Please try again")
 
-    print("""4. (Optional) In order to generate full password (pin,XXXXXX),
-   script needs your pin. You can leave this empty.""")
-
-    pin = input()
-    if len(pin) != 4:
-        pin = ""
-        print("Invalid pin")
-
     activationData = getActivationData(activationCode)
-    activationData['pin'] = pin
+    activationData['pin'] = ''
     createConfig(activationData)
     setCounter(0)
     print("Setup successful!")
-
-    print("Here is your password: ", generatePassword())
+    print("illinikey can now generate offline keys that can be used on the Duo login page.")
+    print("You can bind the following command to a keyboard shortcut for easy entry.")
+    print("    sh -c 'xdotooltype $(illinikey)'")
 
 
 def main():
@@ -152,7 +136,7 @@ def main():
         print("Configuration files not found! Running setup...")
         askForInfo()
     else:
-        print(generatePassword())
+        print(generatePassword(), end='')
 
 
 if __name__ == '__main__':
