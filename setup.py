@@ -1,9 +1,8 @@
 from setuptools import setup
-from remarkable_keyboard import version
 
 setup(
     name='illinikey',
-    version=version.__version__,
+    version='0.1.1',
     packages=['illinikey'],
     author="Evan Widloski",
     author_email="evan@evanw.org",

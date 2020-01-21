@@ -4,6 +4,8 @@ import os
 import sys
 import requests
 import pyotp
+import re
+
 
 CONFIG_PATH = os.path.expanduser('~/.cache/illinikey.json')
 COUNTER_PATH = os.path.expanduser('~/.cache/illinikey_counter.json')
@@ -56,11 +58,12 @@ def getActivationData(code):
 
 def validateLink(link):
     try:
-        assert "m-cd3ecedb.duosecurity.com" in link
-        code = link.split('/')[-1]
-        assert len(code) == 20
-        return True, code
-    except Exception:
+        assert "api-cd3ecedb.duosecurity.com" in link
+        url_pattern = 'qr\?value=duo%3A%2F%2F(.+)-.+$'
+        match = re.search(url_pattern, link)
+        assert match is not None and len(match.groups()) == 1
+        return True, match.groups()[0]
+    except AssertionError:
         return False, None
 
 
@@ -107,15 +110,24 @@ def generatePassword():
 
 def askForInfo():
     print(
-        """
+"""
 1. Visit verify.uillinois.edu/manage and 'Add a new device'.
-2. Add a new Android smartphone.  You can enter a fake phone number.
-3. Request an activation link and paste it here."""
+   > "Add a new device"
+   > "Smartphone"
+   > Continue
+   > Enter a fake phone number or reuse your existing one
+   > "Yes" you want to use the Duo Mobile App.
+   > Continue (and replace existing number if asked)
+   > "Android"
+   > Continue
+   > "I have Duo mobile installed" (no need to actually do this)
+2. Right click on QR code, copy link to image and paste here
+"""
     )
 
     valid = False
     while not valid:
-        link = input('activation link: ')
+        link = input('Activation link: ')
         valid, activationCode = validateLink(link)
 
         if not valid:
@@ -125,10 +137,15 @@ def askForInfo():
     activationData['pin'] = ''
     createConfig(activationData)
     setCounter(0)
-    print("Setup successful!")
-    print("illinikey can now generate offline keys that can be used on the Duo login page.")
-    print("You can bind the following command to a keyboard shortcut for easy entry.")
-    print("    sh -c 'xdotooltype $(illinikey)'")
+    print(
+        """
+Setup successful!
+illinikey can now generate offline keys that can be used on the Duo login page.
+You can bind the following command to a keyboard shortcut for easy entry.
+
+    sh -c 'xdotooltype $(illinikey)'
+        """
+    )
 
 
 def main():
