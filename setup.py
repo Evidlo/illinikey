@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='illinikey',
-    version='0.1.1',
+    version='0.2.1',
     packages=['illinikey'],
     author="Evan Widloski",
     author_email="evan@evanw.org",
@@ -18,7 +18,8 @@ setup(
     },
     install_requires=[
         'pyotp',
-        'requests'
+        'requests',
+        'pycryptodome'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

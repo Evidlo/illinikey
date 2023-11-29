@@ -5,6 +5,7 @@ import sys
 import requests
 import pyotp
 import re
+from Crypto.PublicKey import RSA
 
 
 CONFIG_PATH = os.path.expanduser('~/.cache/illinikey.json')
@@ -32,7 +33,9 @@ def getActivationData(code):
         "jailbroken": False,
         "version": "6.0",
         "language": "EN",
-        "customer_protocol": 1
+        "customer_protocol": 1,
+        "pubkey": RSA.generate(2048).public_key().export_key("PEM").decode(),
+        "pkpush": "rsa-sha512"
     }
 
     ENDPOINT = "https://api-cd3ecedb.duosecurity.com/push/v2/activation/{}"
@@ -48,7 +51,7 @@ def getActivationData(code):
               "Please request a new activation link.")
         sys.exit(1)
 
-    if not res.json()['response']:
+    if 'response' not in res.json():
         print("Unknown error")
         print(res.json())
         sys.exit(1)
